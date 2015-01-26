@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+
+        <link rel="stylesheet" href="static/css/jquery-ui.min.css">
+
+        <script type="text/javascript" src="static/js/jquery.min.js"></script> 
+        <script type="text/javascript" src="static/js/jquery.alphanum.js"></script>
+        <script type="text/javascript" src="static/js/d3.v3.min.js"></script> 
+        <script type="text/javascript" src="static/js/jquery-ui.min.js"></script> 
+        
+        <style>
+
+            .axis {
+
+                font: 14px sans-serif;
+            }
+
+            .axis path,.axis line {
+
+                fill: none;
+                stroke: #000;
+                stroke-width: 3px
+                shape-rendering: crispEdges;
+            }
+
+        </style> 
+
+        <script>
+
+            $( document ).ready(function() { 
+
+                var miscWidth=40, hHeight=$("#barCharts").height();
+                var wWidth = $(window).width() - miscWidth, wHeight = $(window).height() - 2*hHeight;
+                var tooltip;   
+
+                var countUpTimer;
+                var countUp_number = -1;
+                var deferred = $.Deferred();
+                var promise = deferred.promise();                             
+
+                var data
+    
+                $('input:text[name="sNTweetsID"]').numeric({
+                    disallow: '+-',
+                    allowThouSep: false,
+                    allowDecSep:  false
+                })
+
+                $('input:text[name="sStrID"]').val('')
+                $('input:text[name="sNTweetsID"]').val('150')
+
+                $("#barCharts").hide()
+
+                $("#progressbar").progressbar();   
+
+                $("#progressbar").css({
+                    'background': 'LightYellow'
+                });
+
+                $("#progressbar > div").css({
+                    'background': 'Orange'
+                });   
+
+                function checkData()
+                {
+                    if(data['entity'][0]>0 || data['entity'][1]>0 || data['entity'][2]>0 )
+                        return true
+
+                    else if(data['document'][0]>0 || data['document'][1]>0 || data['document'][2]>0 )
+                        return true
+
+                    return false
+                }             
+
+                function completeAnalysis()
+                {
+                   $("#progressbar").progressbar({
+                       value: 100
+                   });
+
+                   $("#progressbar > span").html(100 + "%");
+
+                   $("#progressLabel").text("Analysis Completed")                    
+                }
+
+                function result() 
+                {
+
+                    completeAnalysis()
+
+                    console.log(data)
+
+                    if(checkData())                                
+                    {                        
+                        $("#progressbar").hide()                                
+                        $("#progressLabel").hide()                                                
+
+                        var svg = d3.select("#barCharts").append("svg")
+                            .attr("width", wWidth)
+                            .attr("height", wHeight);
+
+                        tooltip = d3.select("#barCharts")
+                            .append("div")
+                            .style("position", "absolute")
+                            .style("z-index", "10")
+                            .style("visibility", "hidden");
+
+                        wWidth/=2                                    
+
+                        drawChart(data['entity'], 0, svg, "Entity-Level Sentiment")
+                        drawChart(data['document'], 1, svg, "Document-Level Sentiment")
+                    }
+                    else
+                    {
+                        alert("Results can't be compiled as you have reached your quota for the day with regards to the Alchemy API")
+                    }
+
+                }
+
+                function failed() 
+                {
+                   $("#progressbar").css({
+                       'background': 'red'
+                   });
+                }
+
+                function inProgress() 
+                {
+                   $("#progressbar").progressbar({
+                       value: countUp_number
+                   });
+
+                   $("#progressbar > span").html(countUp_number + "%");
+                }
+
+                function countUp() 
+                {
+                    if(countUp_number < 100) 
+                    {
+                       countUp_number += 1;
+                       deferred.notify();
+                       countUpTimer = setTimeout(countUp, 5*$('input:text[name="sNTweetsID"]').val());
+                    } 
+
+                }
+                                                                                                                            
+                $('#sData').click(function() {
+
+                    count=$('input:text[name="sNTweetsID"]').val()
+
+                    if(count<0)
+                        alert("Number of tweets to be analyzed can't be negative.")
+
+                    else if(count>1000)
+                        alert("Number of tweets to be analyzed should be less than 1000.\nThe Alchemy API's free version can only process 1000 queries per day.")
+                    else
+                    {   
+
+                        $("#sParameters").hide()
+                        $("#barCharts").show()                                             
+
+                        promise.done(result);
+                        promise.fail(failed);
+                        promise.progress(inProgress);
+
+                        countUp();                         
+
+                        $.post('/uploadInfo', getJSONData(),
+
+                            function(rData){
+
+                                data=rData
+                                deferred.resolve()                                
+
+                        })
+
+                    }   
+
+                })
+
+                function getJSONData()
+                {
+                    jData={}
+
+                    jData['query']=$('input:text[name="sStrID"]').val()  
+                    jData['count']=$('input:text[name="sNTweetsID"]').val()               
+
+                    return jData
+                }
+
+                function drawChart(data, index, svg, text)
+                {
+                    var names = ['Positive', 'Negative', 'Neutral'], barWidth=Math.min(100, $(window).width()/10)
+                                    
+                    var width = names.length*barWidth,
+                        margin = {top: 30, bottom: 30, left: (wWidth-width)/2, right: (wWidth-width)/2},
+                        height = wHeight - margin.bottom - margin.top;                    
+
+                    var x = d3.scale.ordinal().rangeRoundBands([0, width], .05).domain(names);
+                    var y = d3.scale.linear().domain([0, d3.max(data)]).range([height, 0]);
+
+                    var xAxis = d3.svg.axis()
+                        .scale(x)
+                        .orient("bottom");
+
+                    var yAxis = d3.svg.axis()
+                        .scale(y)
+                        .orient("left")
+                        .ticks(10);
+
+                    var translateX = (index+1)*margin.left + index*(margin.right+width), translateY = margin.top
+
+                    cSvg=svg.append("g").attr("transform", "translate(" + translateX + "," + translateY + ")");
+
+                    cSvg.selectAll("bar")
+                        .data(data)
+                        .enter().append("rect")
+                        .style("fill", "SteelBlue")
+                        .attr("x", function(d, i) { return x(names[i]); })
+                        .attr("width", x.rangeBand())
+                        .attr("y", function(d, i) { return y(data[i]); })
+                        .attr("height", function(d, i) { return height - y(data[i]); })
+
+                        .on("mouseover", function(d,i){
+
+                            d3.select(this).style("fill", "DarkGray");
+                            tooltip.text(names[i]+":"+data[i]); 
+
+                            return tooltip.style("visibility", "visible");
+                        })
+                        .on("mousemove", function(d){
+
+                            return tooltip.style("top",(d3.event.pageY-10)+"px").style("left",(d3.event.pageX+10)+"px");
+                        })
+                        .on("mouseout", function(d){
+
+                            d3.select(this).style("fill", "SteelBlue");                             
+                            return tooltip.style("visibility", "hidden");
+                        });                                              
+
+
+                    cSvg.append("g")
+                        .attr("class", "x axis")
+                        .attr("transform", "translate(0," + height + ")")
+                        .call(xAxis);                       
+
+                    cSvg.append("g")
+                        .attr("class", "y axis")
+                        .call(yAxis)
+                        .append("text")
+                        .attr("transform", "rotate(-90)");
+                    
+                    cSvg.append("text")
+                        .attr("x", (width / 2))             
+                        .attr("y", 0 - (margin.top / 2))
+                        .attr("text-anchor", "middle")  
+                        .style("font-size", "18px") 
+                        .style("text-decoration", "underline")  
+                        .text(text);                        
+
+                }                     
+
+            })
+
+        </script>        
+
+        <title>Twitter Sentiment Analysis</title>      
+    </head>
+
+    <body>  
+
+        <div align="center">
+
+            <div id="sParameters">
+
+                <h2>Parameters for Twitter Sentiment Analysis</h2>            
+
+                Search string: <input type="text" name="sStrID"><br>
+                Number of Tweets: <input type="text" name="sNTweetsID"><br><br>
+
+                <input type="submit" id="sData" value="Submit">                        
+
+            </div> 
+
+            <div id="barCharts">           
+
+                <h2>Bar Charts</h2><br><br>    
+
+                <div id="progressbar" style="margin: 0px 0px 16px 0px;">
+                    <span style="position: absolute;text-align: center;margin: 5px 0 0 47%;"></span>
+                </div>                
+
+                <label id="progressLabel">Analysis in Progress. Please be patient.</label>
+
+            </div>
+            
+        </div> 
+
+    </body>
+</html>
