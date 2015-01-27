@@ -21,6 +21,7 @@ import base64
 import urllib2
 import urllib
 from alchemyapi import AlchemyAPI
+from random import randint
 
 try:
 	import config
@@ -355,8 +356,12 @@ def runAnalyzer(query, count):
 	None
 	"""
 
+	"""return [randint(0,100), randint(0,100), randint(0,100)], [randint(0,100), randint(0,100), randint(0,100)]"""
+
 	auth = oauth()
 	tweets = search(auth, query, int(count) )
 	tweets = analyze(tweets, query)
+
+
 
 	return returnStats(tweets)

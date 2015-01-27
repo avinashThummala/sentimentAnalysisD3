@@ -45,7 +45,17 @@
                     allowDecSep:  false
                 })
 
-                initPage()
+                initPage()      
+
+                $("#progressbar").progressbar();   
+
+                $("#progressbar").css({
+                    'background': 'LightYellow'
+                });
+
+                $("#progressbar > div").css({
+                    'background': 'Orange'
+                });                             
 
                 function initPage()
                 {
@@ -59,17 +69,10 @@
 
                     $("#sAgain").hide()
 
-                    $("#d3Charts").empty()
+                    $("#d3Charts").empty()                  
 
-                    $("#progressbar").progressbar();   
-
-                    $("#progressbar").css({
-                        'background': 'LightYellow'
-                    });
-
-                    $("#progressbar > div").css({
-                        'background': 'Orange'
-                    }); 
+                    deferred = $.Deferred();
+                    promise = deferred.promise(); 
 
                     countUp_number = -1;
                 }
