@@ -101,33 +101,28 @@
 
                     completeAnalysis()
 
-                    if(checkData())                                
-                    {   
-                        $("#sParameters").hide()                     
-                        $("#progressID").hide()                                
+                    $("#sParameters").hide()                     
+                    $("#progressID").hide()                                
 
-                        $("#varTitle").html('Twitter based Sentiment Analysis results of <br/> \"'+$('input:text[name="sStrID"]').val()+"\"")
+                    $("#varTitle").html('Twitter based Sentiment Analysis results of <br/> \"'+$('input:text[name="sStrID"]').val()+"\"")
 
-                        $('#rCharts').show()
+                    $('#rCharts').show()
 
-                        var svg = d3.select("#d3Charts").append("svg")
-                            .attr("width", wWidth)
-                            .attr("height", wHeight);
+                    var svg = d3.select("#d3Charts").append("svg")
+                        .attr("width", wWidth)
+                        .attr("height", wHeight);
 
-                        tooltip = d3.select("#d3Charts")
-                            .append("div")
-                            .style("position", "absolute")
-                            .style("z-index", "10")
-                            .style("visibility", "hidden");                                  
+                    tooltip = d3.select("#d3Charts")
+                        .append("div")
+                        .style("position", "absolute")
+                        .style("z-index", "10")
+                        .style("visibility", "hidden");                                  
 
-                        drawChart(data['entity'], 0, svg, "Entity-Level Sentiment")
-                        drawChart(data['document'], 1, svg, "Document-Level Sentiment")
-                    }
-                    else
-                    {
-                        alert("Results can't be compiled as you have reached your quota for the day with regards to the Alchemy API")
-                        initPage()
-                    }
+                    drawChart(data['entity'], 0, svg, "Entity-Level Sentiment")
+                    drawChart(data['document'], 1, svg, "Document-Level Sentiment")
+
+                    if(!checkData())                                
+                        alert("Results could't be compiled as you have reached your quota for the day with regards to the Alchemy API")
 
                 }
 
@@ -169,8 +164,6 @@
                         alert("Number of tweets to be analyzed should be less than 1000.\nThe Alchemy API's free version can only process 1000 queries per day.")
                     else
                     {   
-
-                        //$("#sParameters").hide()
 
                         $("#progressLabel").text('Analysis in Progress. Please be patient.')
                         $("#progressID").show()                                             
