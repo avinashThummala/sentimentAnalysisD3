@@ -356,8 +356,6 @@ def runAnalyzer(query, count):
 	None
 	"""
 
-	"""return [randint(0,100), randint(0,100), randint(0,100)], [randint(0,100), randint(0,100), randint(0,100)]"""
-
 	auth = oauth()
 	tweets = search(auth, query, int(count) )
 	tweets = analyze(tweets, query)

@@ -31,7 +31,7 @@
 
             $( document ).ready(function() { 
 
-                var miscWidth=40, hHeight=$("#barCharts").height();
+                var miscWidth=40, hHeight=$("#rCharts").height();
                 var wWidth = $(window).width() - miscWidth, wHeight = $(window).height() - 2*hHeight;
 
                 var countUpTimer, countUp_number, tooltip, data;
@@ -45,7 +45,7 @@
                     allowDecSep:  false
                 })
 
-                initPage()      
+                initPage()   
 
                 $("#progressbar").progressbar();   
 
@@ -55,24 +55,21 @@
 
                 $("#progressbar > div").css({
                     'background': 'Orange'
-                });                             
+                });                                                
 
                 function initPage()
                 {
                     $("#sParameters").show()
+                    $('#progressID').hide()
+                    $('#rCharts').hide()
 
                     $('input:text[name="sStrID"]').val('')
                     $('input:text[name="sNTweetsID"]').val('150')
 
-                    $("#varTitle").text('Bar Charts')
-                    $("#barCharts").hide()
-
-                    $("#sAgain").hide()
-
                     $("#d3Charts").empty()                  
 
                     deferred = $.Deferred();
-                    promise = deferred.promise(); 
+                    promise = deferred.promise();                     
 
                     countUp_number = -1;
                 }
@@ -105,19 +102,19 @@
                     completeAnalysis()
 
                     if(checkData())                                
-                    {                        
-                        $("#progressbar").hide()                                
-                        $("#progressLabel").hide()  
+                    {   
+                        $("#sParameters").hide()                     
+                        $("#progressID").hide()                                
 
                         $("#varTitle").html('Twitter based Sentiment Analysis results of <br/> \"'+$('input:text[name="sStrID"]').val()+"\"")
 
-                        $("#sAgain").show()                                                                                         
+                        $('#rCharts').show()
 
                         var svg = d3.select("#d3Charts").append("svg")
                             .attr("width", wWidth)
                             .attr("height", wHeight);
 
-                        tooltip = d3.select("#barCharts")
+                        tooltip = d3.select("#d3Charts")
                             .append("div")
                             .style("position", "absolute")
                             .style("z-index", "10")
@@ -129,6 +126,7 @@
                     else
                     {
                         alert("Results can't be compiled as you have reached your quota for the day with regards to the Alchemy API")
+                        initPage()
                     }
 
                 }
@@ -172,8 +170,10 @@
                     else
                     {   
 
-                        $("#sParameters").hide()
-                        $("#barCharts").show()                                             
+                        //$("#sParameters").hide()
+
+                        $("#progressLabel").text('Analysis in Progress. Please be patient.')
+                        $("#progressID").show()                                             
 
                         promise.done(result);
                         promise.fail(failed);
@@ -299,13 +299,11 @@
                 Search string: <input type="text" name="sStrID"><br>
                 Number of Tweets: <input type="text" name="sNTweetsID"><br><br>
 
-                <input type="submit" id="sData" value="Submit">                        
+                <input type="submit" id="sData" value="Submit"><br><br>                        
 
             </div> 
 
-            <div id="barCharts">           
-
-                <h2 id="varTitle">Bar Charts</h2><br><br>    
+            <div id="progressID">           
 
                 <div id="progressbar" style="margin: 0px 0px 16px 0px;">
                     <span style="position: absolute;text-align: center;margin: 5px 0 0 47%;"></span>
@@ -315,10 +313,16 @@
 
             </div>
 
-            <div id="d3Charts">
-            </div>            
+            <div id='rCharts'>
 
-            <input type="submit" id="sAgain" value="Try it again">                        
+                <h2 id="varTitle">Bar Charts</h2><br><br>    
+
+                <div id="d3Charts">
+                </div>            
+
+                <input type="submit" id="sAgain" value="Try it again">                        
+
+            </div>
             
         </div> 
 
