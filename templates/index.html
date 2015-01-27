@@ -33,14 +33,11 @@
 
                 var miscWidth=40, hHeight=$("#barCharts").height();
                 var wWidth = $(window).width() - miscWidth, wHeight = $(window).height() - 2*hHeight;
-                var tooltip;   
 
-                var countUpTimer;
-                var countUp_number = -1;
+                var countUpTimer, countUp_number, tooltip, data;
+
                 var deferred = $.Deferred();
                 var promise = deferred.promise();                             
-
-                var data
     
                 $('input:text[name="sNTweetsID"]').numeric({
                     disallow: '+-',
@@ -48,20 +45,34 @@
                     allowDecSep:  false
                 })
 
-                $('input:text[name="sStrID"]').val('')
-                $('input:text[name="sNTweetsID"]').val('150')
+                initPage()
 
-                $("#barCharts").hide()
+                function initPage()
+                {
+                    $("#sParameters").show()
 
-                $("#progressbar").progressbar();   
+                    $('input:text[name="sStrID"]').val('')
+                    $('input:text[name="sNTweetsID"]').val('150')
 
-                $("#progressbar").css({
-                    'background': 'LightYellow'
-                });
+                    $("#varTitle").text('Bar Charts')
+                    $("#barCharts").hide()
 
-                $("#progressbar > div").css({
-                    'background': 'Orange'
-                });   
+                    $("#sAgain").hide()
+
+                    $("#d3Charts").empty()
+
+                    $("#progressbar").progressbar();   
+
+                    $("#progressbar").css({
+                        'background': 'LightYellow'
+                    });
+
+                    $("#progressbar > div").css({
+                        'background': 'Orange'
+                    }); 
+
+                    countUp_number = -1;
+                }
 
                 function checkData()
                 {
@@ -82,7 +93,7 @@
 
                    $("#progressbar > span").html(100 + "%");
 
-                   $("#progressLabel").text("Analysis Completed")                    
+                   $("#progressLabel").text("Analysis Completed") 
                 }
 
                 function result() 
@@ -90,14 +101,16 @@
 
                     completeAnalysis()
 
-                    console.log(data)
-
                     if(checkData())                                
                     {                        
                         $("#progressbar").hide()                                
-                        $("#progressLabel").hide()                                                
+                        $("#progressLabel").hide()  
 
-                        var svg = d3.select("#barCharts").append("svg")
+                        $("#varTitle").html('Twitter based Sentiment Analysis results of <br/> \"'+$('input:text[name="sStrID"]').val()+"\"")
+
+                        $("#sAgain").show()                                                                                         
+
+                        var svg = d3.select("#d3Charts").append("svg")
                             .attr("width", wWidth)
                             .attr("height", wHeight);
 
@@ -105,9 +118,7 @@
                             .append("div")
                             .style("position", "absolute")
                             .style("z-index", "10")
-                            .style("visibility", "hidden");
-
-                        wWidth/=2                                    
+                            .style("visibility", "hidden");                                  
 
                         drawChart(data['entity'], 0, svg, "Entity-Level Sentiment")
                         drawChart(data['document'], 1, svg, "Document-Level Sentiment")
@@ -180,6 +191,12 @@
 
                 })
 
+                $('#sAgain').click(function() {
+
+                       initPage()
+
+                })
+
                 function getJSONData()
                 {
                     jData={}
@@ -195,7 +212,7 @@
                     var names = ['Positive', 'Negative', 'Neutral'], barWidth=Math.min(100, $(window).width()/10)
                                     
                     var width = names.length*barWidth,
-                        margin = {top: 30, bottom: 30, left: (wWidth-width)/2, right: (wWidth-width)/2},
+                        margin = {top: 30, bottom: 30, left: (wWidth/2-width)/2, right: (wWidth/2-width)/2},
                         height = wHeight - margin.bottom - margin.top;                    
 
                     var x = d3.scale.ordinal().rangeRoundBands([0, width], .05).domain(names);
@@ -239,7 +256,6 @@
                             d3.select(this).style("fill", "SteelBlue");                             
                             return tooltip.style("visibility", "hidden");
                         });                                              
-
 
                     cSvg.append("g")
                         .attr("class", "x axis")
@@ -286,7 +302,7 @@
 
             <div id="barCharts">           
 
-                <h2>Bar Charts</h2><br><br>    
+                <h2 id="varTitle">Bar Charts</h2><br><br>    
 
                 <div id="progressbar" style="margin: 0px 0px 16px 0px;">
                     <span style="position: absolute;text-align: center;margin: 5px 0 0 47%;"></span>
@@ -295,6 +311,11 @@
                 <label id="progressLabel">Analysis in Progress. Please be patient.</label>
 
             </div>
+
+            <div id="d3Charts">
+            </div>            
+
+            <input type="submit" id="sAgain" value="Try it again">                        
             
         </div> 
 
